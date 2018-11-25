@@ -85,6 +85,7 @@ Input::Input(LAMMPS *lmp, int argc, char **argv) : Pointers(lmp)
 
   if (me == 0) {
     nfile = maxfile = 1;
+    // smalloc 应该指的是 string  malloc
     infiles = (FILE **) memory->smalloc(sizeof(FILE *),"input:infiles");
     infiles[0] = infile;
   } else infiles = NULL;
@@ -95,6 +96,7 @@ Input::Input(LAMMPS *lmp, int argc, char **argv) : Pointers(lmp)
 
   command_map = new CommandCreatorMap();
 
+// 把各种命令放到一个map中，没找到style_command.h 抓这个文件
 #define COMMAND_CLASS
 #define CommandStyle(key,Class) \
   (*command_map)[#key] = &command_creator<Class>;
@@ -108,12 +110,15 @@ Input::Input(LAMMPS *lmp, int argc, char **argv) : Pointers(lmp)
 
   int iarg = 1;
   while (iarg < argc) {
+    // 通过命令行加变量
     if (strcmp(argv[iarg],"-var") == 0 || strcmp(argv[iarg],"-v") == 0) {
       int jarg = iarg+3;
       while (jarg < argc && argv[jarg][0] != '-') jarg++;
       variable->set(argv[iarg+1],jarg-iarg-2,&argv[iarg+2]);
       iarg = jarg;
-    } else if (strcmp(argv[iarg],"-echo") == 0 ||
+    } 
+    // 执行echo
+    else if (strcmp(argv[iarg],"-echo") == 0 ||
                strcmp(argv[iarg],"-e") == 0) {
       narg = 1;
       char **tmp = arg;        // trick echo() into using argv instead of arg
@@ -147,7 +152,7 @@ Input::~Input()
    process all input from infile
    infile = stdin or file if command-line arg "-in" was used
 ------------------------------------------------------------------------- */
-
+// 读取 in 文件
 void Input::file()
 {
   int m,n;
@@ -175,7 +180,7 @@ void Input::file()
         // continue if last char read was not a newline
         // could happen if line is very long
 
-        m = strlen(line);
+        m = strlen(line); // 当前行的长度
         if (line[m-1] != '\n') continue;
 
         // continue reading if final printable char is & char
@@ -230,7 +235,8 @@ void Input::file()
 
     // parse the line
     // if no command, skip to next line in input script
-
+    
+    // 前面都是各种格式验证，这里才开始解析当前行命令
     parse();
     if (command == NULL) continue;
 
@@ -340,9 +346,10 @@ void Input::parse()
   // quoteflag = 1,2,3 when encounter first single/double,triple quote
   // quoteflag = 0 when encounter matching single/double,triple quote
 
-  int quoteflag = 0;
+  int quoteflag = 0; // 是否有 引号
   char *ptr = copy;
-  while (*ptr) {
+  while (*ptr) {  // 一次解析一个字母
+    // 如果是 注释，就啥也不做，直接break
     if (*ptr == '#' && !quoteflag) {
       *ptr = '\0';
       break;
@@ -368,11 +375,13 @@ void Input::parse()
   // perform $ variable substitution (print changes)
   // except if searching for a label since earlier variable may not be defined
 
+  // 这里是来解析 $ 变量的
   if (!label_active) substitute(copy,work,maxcopy,maxwork,1);
 
   // command = 1st arg in copy string
 
   char *next;
+  // 获取下一个词
   command = nextword(copy,&next);
   if (command == NULL) return;
 
@@ -768,6 +777,8 @@ void Input::reallocate(char *&str, int &max, int n)
    return 0 if successful, -1 if did not recognize command
 ------------------------------------------------------------------------- */
 
+// 从文件中解析出命令就可以执行命令了，这是最重要的部分，是项目的枢纽
+// 注意，没解析出一个命令都会执行，不会等整个in文件都解析完了再执行
 int Input::execute_command()
 {
   int flag = 1;
@@ -1362,9 +1373,10 @@ void Input::shell()
 
 /* ---------------------------------------------------------------------- */
 
+// 执行 "varibale x index 1" 这样的命令
 void Input::variable_command()
 {
-  variable->set(narg,arg);
+  variable->set(narg,arg); // 这个实现在variable.cpp 中
 }
 
 /* ---------------------------------------------------------------------- */

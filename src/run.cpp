@@ -35,6 +35,7 @@ Run::Run(LAMMPS *lmp) : Pointers(lmp) {}
 
 /* ---------------------------------------------------------------------- */
 
+// 这里是in 文件中 run 命令的执行地点
 void Run::command(int narg, char **arg)
 {
   if (narg < 1) error->all(FLERR,"Illegal run command");
@@ -61,6 +62,8 @@ void Run::command(int narg, char **arg)
   int first,last;
 
   int iarg = 1;
+
+  // 如果 run 后面不仅仅是 次数，而且有其他的参数
   while (iarg < narg) {
     if (strcmp(arg[iarg],"upto") == 0) {
       if (iarg+1 > narg) error->all(FLERR,"Illegal run command");
@@ -107,7 +110,7 @@ void Run::command(int narg, char **arg)
 
   // set nsteps as integer, using upto value if specified
 
-  int nsteps;
+  int nsteps; // run 运行的次数
   if (!uptoflag) {
     if (nsteps_input < 0 || nsteps_input > MAXSMALLINT)
       error->all(FLERR,"Invalid run command N value");
@@ -178,7 +181,7 @@ void Run::command(int narg, char **arg)
       update->integrate->setup(1);
     } else output->setup(0);
 
-    timer->init();
+    timer->init(); // run 之前开始计时
     timer->barrier_start();
     update->integrate->run(nsteps);
     timer->barrier_stop();

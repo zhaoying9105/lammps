@@ -51,6 +51,7 @@ AtomVec::~AtomVec()
    make copy of args for use by restart & replicate
 ------------------------------------------------------------------------- */
 
+// 把命令行里的narg arg都copy一遍
 void AtomVec::store_args(int narg, char **arg)
 {
   nargcopy = narg;

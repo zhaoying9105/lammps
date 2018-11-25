@@ -80,6 +80,7 @@ enum{SUM,XMIN,XMAX,AVE,TRAP,SLOPE};
 
 /* ---------------------------------------------------------------------- */
 
+// 看起来constructor没错什么事情
 Variable::Variable(LAMMPS *lmp) : Pointers(lmp)
 {
   MPI_Comm_rank(world,&me);
@@ -101,7 +102,7 @@ Variable::Variable(LAMMPS *lmp) : Pointers(lmp)
   randomatom = NULL;
 
   // customize by assigning a precedence level
-
+  // 设置了优先级，但是不知道是什么的优先级
   precedence[DONE] = 0;
   precedence[OR] = precedence[XOR] = 1;
   precedence[AND] = 2;
@@ -154,7 +155,7 @@ void Variable::set(int narg, char **arg)
 
   // DELETE
   // doesn't matter if variable no longer exists
-
+  // 如果是 variable 变量名 delete
   if (strcmp(arg[1],"delete") == 0) {
     if (narg != 2) error->all(FLERR,"Illegal variable command");
     if (find(arg[0]) >= 0) remove(find(arg[0]));
@@ -163,7 +164,9 @@ void Variable::set(int narg, char **arg)
   // INDEX
   // num = listed args, which = 1st value, data = copied args
 
-  } else if (strcmp(arg[1],"index") == 0) {
+  } 
+  // 如果是 variable 变量名 index
+  else if (strcmp(arg[1],"index") == 0) {
     if (narg < 3) error->all(FLERR,"Illegal variable command");
     if (find(arg[0]) >= 0) return;
     if (nvar == maxvar) grow();

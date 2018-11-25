@@ -36,6 +36,8 @@ namespace LAMMPS_NS {
 
 class Pointers {
  public:
+
+  // 吧 lampps 对象放到pointer中持有
   Pointers(LAMMPS *ptr) :
     lmp(ptr),
     memory(ptr->memory),

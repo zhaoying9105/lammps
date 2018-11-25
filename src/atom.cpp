@@ -409,7 +409,7 @@ void Atom::settings(Atom *old)
    create an AtomVec style
    called from lammps.cpp, input script, restart file, replicate
 ------------------------------------------------------------------------- */
-
+// 根据atom的 style 创建 atom向量
 void Atom::create_avec(const char *style, int narg, char **arg, int trysuffix)
 {
   delete [] atom_style;
@@ -446,7 +446,9 @@ void Atom::create_avec(const char *style, int narg, char **arg, int trysuffix)
 
   int sflag;
   avec = new_avec(style,trysuffix,sflag);
+  // 把 nargs arg 复制一份保存下来，不过第一遍执行到这里的时候 nrag, arg都是空的
   avec->store_args(narg,arg);
+  // 现在的实现是什么也不做
   avec->process_args(narg,arg);
   avec->grow(1);
 
@@ -480,6 +482,8 @@ void Atom::create_avec(const char *style, int narg, char **arg, int trysuffix)
 
 AtomVec *Atom::new_avec(const char *style, int trysuffix, int &sflag)
 {
+
+  // 如果 lammps 允许增加后缀就增加后缀
   if (trysuffix && lmp->suffix_enable) {
     if (lmp->suffix) {
       sflag = 1;
@@ -503,6 +507,8 @@ AtomVec *Atom::new_avec(const char *style, int trysuffix, int &sflag)
   }
 
   sflag = 0;
+  // 如果设置了atom 的 style
+  // 在 avec_map 中存储了不同类型的atomvec 构造类，可以认为用了工厂模式
   if (avec_map->find(style) != avec_map->end()) {
     AtomVecCreator avec_creator = (*avec_map)[style];
     return avec_creator(lmp);

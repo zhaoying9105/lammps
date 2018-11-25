@@ -50,7 +50,9 @@ int main(int argc, char **argv)
 
 #ifdef LAMMPS_EXCEPTIONS
   try {
+    // lammps的初始化做了太多的工作了
     LAMMPS *lammps = new LAMMPS(argc,argv,MPI_COMM_WORLD);
+    // 开始读取 in 文件
     lammps->input->file();
     delete lammps;
   } catch(LAMMPSAbortException & ae) {

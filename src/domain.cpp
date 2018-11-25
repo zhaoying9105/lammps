@@ -53,6 +53,7 @@ using namespace MathConst;
    default is periodic
 ------------------------------------------------------------------------- */
 
+// 里面的这些参数都要看头文件， 不过看了也不大懂
 Domain::Domain(LAMMPS *lmp) : Pointers(lmp)
 {
   box_exist = 0;
@@ -60,12 +61,12 @@ Domain::Domain(LAMMPS *lmp) : Pointers(lmp)
 
   dimension = 3;
   nonperiodic = 0;
-  xperiodic = yperiodic = zperiodic = 1;
+  xperiodic = yperiodic = zperiodic = 1; // xyz 方向的周期性
   periodicity[0] = xperiodic;
   periodicity[1] = yperiodic;
   periodicity[2] = zperiodic;
 
-  boundary[0][0] = boundary[0][1] = 0;
+  boundary[0][0] = boundary[0][1] = 0; // 方盒子的边界点坐标
   boundary[1][0] = boundary[1][1] = 0;
   boundary[2][0] = boundary[2][1] = 0;
 
@@ -73,7 +74,7 @@ Domain::Domain(LAMMPS *lmp) : Pointers(lmp)
   minylo = minyhi = 0.0;
   minzlo = minzhi = 0.0;
 
-  triclinic = 0;
+  triclinic = 0; // 是不是三角形
   tiltsmall = 1;
 
   boxlo[0] = boxlo[1] = boxlo[2] = -0.5;

@@ -69,6 +69,7 @@ LAMMPS::LAMMPS(int narg, char **arg, MPI_Comm communicator)
 {
   memory = new Memory(this);
   error = new Error(this);
+  // 初始化 universe，以及 universe中的communicator
   universe = new Universe(this,communicator);
   output = NULL;
   python = NULL;
@@ -98,7 +99,10 @@ LAMMPS::LAMMPS(int narg, char **arg, MPI_Comm communicator)
   //   store full multi-app comm in cscomm
   //   cscomm is used by CSLIB package to exchange messages w/ other app
 
+
+  // 因为第 0 参数是可执行文件的名字，所以iarg从1开始 
   int iarg = 1;
+  // 是否是以 mpi 形式启动
   if (narg-iarg >= 2 && (strcmp(arg[iarg],"-mpi") == 0 ||
                          strcmp(arg[iarg],"-m") == 0)) {
     int me,nprocs;
@@ -129,7 +133,7 @@ LAMMPS::LAMMPS(int narg, char **arg, MPI_Comm communicator)
 
   suffix = suffix2 = NULL;
   suffix_enable = 0;
-  if (arg) exename = arg[0];
+  if (arg) exename = arg[0]; // 可执行程序的名字
   else exename = NULL;
   packargs = NULL;
   num_package = 0;
@@ -142,14 +146,15 @@ LAMMPS::LAMMPS(int narg, char **arg, MPI_Comm communicator)
   int *plast = NULL;
 
   iarg = 1;
+  // 解析命令行参数，不是 in 文件的内容
   while (iarg < narg) {
-
+    // echo
     if (strcmp(arg[iarg],"-echo") == 0 ||
                strcmp(arg[iarg],"-e") == 0) {
       if (iarg+2 > narg)
         error->universe_all(FLERR,"Invalid command-line argument");
       iarg += 2;
-
+    // help
     } else if (strcmp(arg[iarg],"-help") == 0 ||
                strcmp(arg[iarg],"-h") == 0) {
       if (iarg+1 > narg)
@@ -157,14 +162,15 @@ LAMMPS::LAMMPS(int narg, char **arg, MPI_Comm communicator)
       helpflag = 1;
       citeflag = 0;
       iarg += 1;
-
+    // in 文件参数
     } else if (strcmp(arg[iarg],"-in") == 0 ||
                strcmp(arg[iarg],"-i") == 0) {
+      // 在 -in后面必须还有参数，也就是文件路径
       if (iarg+2 > narg)
         error->universe_all(FLERR,"Invalid command-line argument");
-      inflag = iarg + 1;
-      iarg += 2;
-
+      inflag = iarg + 1; // inflag 现在是in文件路径的指针的了
+      iarg += 2; // flag跳两个
+    // kokkos 不过我不知道这个到底是什么
     } else if (strcmp(arg[iarg],"-kokkos") == 0 ||
                strcmp(arg[iarg],"-k") == 0) {
       if (iarg+2 > narg)
@@ -177,14 +183,14 @@ LAMMPS::LAMMPS(int narg, char **arg, MPI_Comm communicator)
       kkfirst = iarg;
       while (iarg < narg && arg[iarg][0] != '-') iarg++;
       kklast = iarg;
-
+    // log
     } else if (strcmp(arg[iarg],"-log") == 0 ||
                strcmp(arg[iarg],"-l") == 0) {
       if (iarg+2 > narg)
         error->universe_all(FLERR,"Invalid command-line argument");
       logflag = iarg + 1;
       iarg += 2;
-
+    // -mpi
     } else if (strcmp(arg[iarg],"-mpi") == 0 ||
                strcmp(arg[iarg],"-m") == 0) {
       if (iarg+2 > narg)
@@ -336,7 +342,8 @@ LAMMPS::LAMMPS(int narg, char **arg, MPI_Comm communicator)
   }
 
   // if no partition command-line switch, universe is one world with all procs
-
+  // 没有 partion 命令行参数 就没有 universe
+  // 估计简单计算不用回多台服务器，不过超算应该会用吧
   if (universe->existflag == 0) universe->add_world(NULL);
 
   // sum of procs in all worlds must equal total # of procs
@@ -372,6 +379,7 @@ LAMMPS::LAMMPS(int narg, char **arg, MPI_Comm communicator)
       if (universe->uscreen == NULL)
         error->universe_one(FLERR,"Cannot open universe screen file");
     }
+    // 如果没有设置log那么默认保存log到Log.lammps文件中
     if (logflag == 0) {
       if (helpflag == 0) {
         universe->ulogfile = fopen("log.lammps","w");
@@ -398,6 +406,7 @@ LAMMPS::LAMMPS(int narg, char **arg, MPI_Comm communicator)
   // set world screen, logfile, communicator, infile
   // open input script if from file
 
+  // 如果只有一个world
   if (universe->existflag == 0) {
     screen = universe->uscreen;
     logfile = universe->ulogfile;
@@ -423,7 +432,9 @@ LAMMPS::LAMMPS(int narg, char **arg, MPI_Comm communicator)
   // set world screen, logfile, communicator, infile
   // open input script
 
-  } else {
+  }
+  // 如果有不止一个world
+   else {
     int me;
     MPI_Comm_split(universe->uworld,universe->iworld,0,&world);
     MPI_Comm_rank(world,&me);
@@ -513,7 +524,7 @@ LAMMPS::LAMMPS(int narg, char **arg, MPI_Comm communicator)
   }
 
   // check consistency of datatype settings in lmptype.h
-
+  // 检查数据类型是否合适
   if (sizeof(smallint) != sizeof(int))
     error->all(FLERR,"Smallint setting in lmptype.h is invalid");
   if (sizeof(imageint) < sizeof(smallint))
@@ -561,16 +572,17 @@ LAMMPS::LAMMPS(int narg, char **arg, MPI_Comm communicator)
   }
 
   // allocate CiteMe class if enabled
-
+  // 设置论文引用格式
+  // 这玩意一定要写到代码里吗？
   if (citeflag) citeme = new CiteMe(this);
   else citeme = NULL;
 
   // allocate input class now that MPI is fully setup
-
+  // 把命令行参数放到Input类中进一步处理，之前只是确认各种参数存在与否
   input = new Input(this,narg,arg);
 
   // copy package cmdline arguments
-
+  // 不知道 npack 是什么已死
   if (npack > 0) {
     num_package = npack;
     packargs = new char**[npack];
@@ -586,13 +598,15 @@ LAMMPS::LAMMPS(int narg, char **arg, MPI_Comm communicator)
   }
 
   // allocate top-level classes
-
+  // 对 lammps对象进行一部分创建，做的事情很多了
   create();
+  // 根据不同的suffix 来决定计算放在哪里，如果suffix_enable == false 那么就什么也不做
   post_create();
 
   // if helpflag set, print help and quit with "success" status
 
   if (helpflag) {
+    // 打印 help 信息
     if (universe->me == 0 && screen) help();
     error->done(0);
   }
@@ -602,6 +616,7 @@ LAMMPS::LAMMPS(int narg, char **arg, MPI_Comm communicator)
   // add "noinit" to write_data to prevent a system init
   // write_dump will just give a warning message about no init
 
+  // 如果是restart命令，这块还没细看，因为没有restart
   if (restart2data || restart2dump) {
     char cmd[256];
     snprintf(cmd,248,"read_restart %s\n",restartfile);
@@ -710,6 +725,7 @@ void LAMMPS::create()
   else comm = new CommBrick(this);
 
   if (kokkos) neighbor = new NeighborKokkos(this);
+  // 创建neighbor ，注意到现在为止还没有读取in文件
   else neighbor = new Neighbor(this);
 
   if (kokkos) domain = new DomainKokkos(this);
@@ -728,16 +744,24 @@ void LAMMPS::create()
     atom->create_avec("atomic",0,NULL,1);
 
   group = new Group(this);
+  // 这里的意思应该是 初始化了group之后，在group中两两元素之间设置作用力，group最大也就32，因为force会随着group指数型增大
   force = new Force(this);    // must be after group, to create temperature
 
   if (kokkos) modify = new ModifyKokkos(this);
+  // 时间步之间的操作类型，包括 fix 和 compute两种，感觉是抽象成都比较高的一个概念
   else modify = new Modify(this);
-
+  
+  // 确定这个程序到底要输出什么东西
   output = new Output(this);  // must be after group, so "all" exists
                               // must be after modify so can create Computes
+
+  // update 看起来应该是 进行优化的策略， 比如梯度下降啦
   update = new Update(this);  // must be after output, force, neighbor
+
+  // 初始化一个定时器，这个没什么好说的
   timer = new Timer(this);
 
+  // 这个python对象应该就是python借口在C++中的对应物了
   python = new Python(this);
 }
 

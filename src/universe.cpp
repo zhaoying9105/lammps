@@ -34,23 +34,26 @@ static char *date2num(const char *version);
 
 Universe::Universe(LAMMPS *lmp, MPI_Comm communicator) : Pointers(lmp)
 {
-  version = (const char *) LAMMPS_VERSION;
-  num_ver = date2num(version);
+  version = (const char *) LAMMPS_VERSION; // 我的版本是 12 Nov 2018
+  num_ver = date2num(version); // 字符串转换成数字，即 20181115
 
-  uworld = uorig = communicator;
-  MPI_Comm_rank(uworld,&me);
+  uworld = uorig = communicator; // universe内统一的communicator
+  MPI_Comm_rank(uworld,&me); // me 是当前线程所在的world 是 universe中的一个
   MPI_Comm_size(uworld,&nprocs);
 
-  uscreen = stdout;
+  uscreen = stdout; // 屏幕打印就是标准输出
   ulogfile = NULL;
 
-  existflag = 0;
-  nworlds = 0;
+  existflag = 0; // universe 默认不存在
+  nworlds = 0; // world 的数量默认是0
   procs_per_world = NULL;
   root_proc = NULL;
 
-  memory->create(uni2orig,nprocs,"universe:uni2orig");
+  // uni2orig 是 proc 在 communicator 中的位置
+  memory->create(uni2orig,nprocs,"universe:uni2orig"); // 此时 uni2orig 是 null，给uni2orig 赋予名字和内存地址，nprocs 表示 处理器的数量
+  // 每个 proc 在 communicator中给一个位置
   for (int i = 0; i < nprocs; i++) uni2orig[i] = i;
+  
 }
 
 /* ---------------------------------------------------------------------- */

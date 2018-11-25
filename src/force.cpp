@@ -42,6 +42,7 @@ using namespace LAMMPS_NS;
 
 /* ---------------------------------------------------------------------- */
 
+// 这个应该是两两之间的作用力
 Force::Force(LAMMPS *lmp) : Pointers(lmp)
 {
   newton = newton_pair = newton_bond = 1;
@@ -84,6 +85,8 @@ Force::Force(LAMMPS *lmp) : Pointers(lmp)
 
   pair_map = new PairCreatorMap();
 
+
+// 下面这些宏的意思是根据不同的pair bond angle dihedral 等 类型拿到相应的create对象，然后放到各自的map中，以备调用
 #define PAIR_CLASS
 #define PairStyle(key,Class) \
   (*pair_map)[#key] = &pair_creator<Class>;

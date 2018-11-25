@@ -76,6 +76,8 @@ static const char cite_neigh_multi[] =
 
 /* ---------------------------------------------------------------------- */
 
+
+// 参数贼多，而且不太清楚是什么意思
 Neighbor::Neighbor(LAMMPS *lmp) : Pointers(lmp),
 pairclass(NULL), pairnames(NULL), pairmasks(NULL)
 {

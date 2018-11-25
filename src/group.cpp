@@ -52,8 +52,8 @@ enum{LT,LE,GT,GE,EQ,NEQ,BETWEEN};
 Group::Group(LAMMPS *lmp) : Pointers(lmp)
 {
   MPI_Comm_rank(world,&me);
-
-  names = new char*[MAX_GROUP];
+  // 一个group最多有 MAX_GROUP 个元素
+  names = new char*[MAX_GROUP]; //  MAX_GROUP 32
   bitmask = new int[MAX_GROUP];
   inversemask = new int[MAX_GROUP];
   dynamic = new int[MAX_GROUP];
